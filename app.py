@@ -1,392 +1,310 @@
 import streamlit as st
-
 from recommendation_engine import generate_plan
 from pdf_generator import generate_pdf
 from save_user import save_user
 
+
+# -------------------
+# PAGE
+# -------------------
 
 st.set_page_config(
     page_title="FITGEN AI",
     layout="wide"
 )
 
-
 st.title("🏋️ FITGEN AI")
-
-st.subheader(
-    "Personalized Workout & Diet Planner"
-)
+st.subheader("Personalized Workout & Diet Planner")
 
 
 # -------------------
 # INPUTS
 # -------------------
 
-
-col1,col2=st.columns(2)
-
+col1, col2 = st.columns(2)
 
 with col1:
 
-    name=st.text_input(
-        "Name"
-    )
+    name = st.text_input("Name")
 
-    age=st.number_input(
+    age = st.number_input(
         "Age",
-        10,
-        100,
-        21
+        min_value=10,
+        max_value=100,
+        value=21
     )
 
-    height=st.number_input(
+    height = st.number_input(
         "Height (cm)",
-        100,
-        250,
-        170
+        min_value=100,
+        max_value=250,
+        value=170
     )
 
 
 with col2:
 
-    weight=st.number_input(
+    weight = st.number_input(
         "Weight (kg)",
-        30,
-        200,
-        70
+        min_value=30,
+        max_value=200,
+        value=70
     )
 
-    goal=st.selectbox(
-
+    goal = st.selectbox(
         "Goal",
-
         [
-
-        "Weight Loss",
-
-        "Muscle Gain",
-
-        "Maintain"
-
+            "Weight Loss",
+            "Muscle Gain",
+            "Maintain"
         ]
-
     )
 
 
-
-food=st.selectbox(
-
-"Food Preference",
-
-[
-"Veg",
-"NonVeg"
-]
-
+food = st.selectbox(
+    "Food Preference",
+    [
+        "Veg",
+        "Non-Veg"
+    ]
 )
 
 
-
-budget=st.selectbox(
-
-"Budget",
-
-[
-"Low",
-"Medium",
-"High"
-]
-
+budget = st.selectbox(
+    "Budget",
+    [
+        "Low",
+        "Medium",
+        "High"
+    ]
 )
 
 
-
-
-
-
-experience=st.selectbox(
-
-"Workout Experience",
-
-[
-"Beginner",
-
-"Intermediate",
-
-"Advanced"
-
-]
-
+experience = st.selectbox(
+    "Workout Experience",
+    [
+        "Beginner",
+        "Intermediate",
+        "Advanced"
+    ]
 )
 
 
-
-activity=st.selectbox(
-
-"Activity Level",
-
-[
-"Sedentary",
-
-"Moderate",
-
-"Active"
-
-]
-
+activity = st.selectbox(
+    "Activity Level",
+    [
+        "Sedentary",
+        "Moderate",
+        "Active"
+    ]
 )
 
 
-
-location=st.selectbox(
-
-"Workout Location",
-
-[
-"Home",
-
-"Gym"
-
-]
-
+location = st.selectbox(
+    "Workout Location",
+    [
+        "Home",
+        "Gym"
+    ]
 )
 
 
-
-allergy=st.text_input(
-"Food Allergy"
+allergy = st.text_input(
+    "Food Allergy"
 )
-
 
 
 # -------------------
 # BUTTONS
 # -------------------
 
-
-c1,c2=st.columns(2)
-
+c1, c2 = st.columns(2)
 
 with c1:
-
-    save=st.button(
-        "💾 Save User Details"
+    save = st.button(
+        "💾 Save User Details",
+        key="save_btn"
     )
-
 
 with c2:
-
-    generate=st.button(
-        "Generate Professional Plan"
+    generate = st.button(
+        "Generate Professional Plan",
+        key="generate_btn"
     )
 
+
+# -------------------
+# GENERATE FIRST
+# -------------------
+
+result = None
+
+if generate:
+
+    try:
+
+        result = generate_plan(
+            age,
+            height,
+            weight,
+            goal,
+            budget,
+            food,
+            experience,
+            activity,
+            allergy
+        )
+
+        st.session_state["plan"] = result
+
+    except Exception as e:
+
+        st.error(f"Generate Error: {e}")
+
+
+if "plan" in st.session_state:
+    result = st.session_state["plan"]
 
 
 # -------------------
 # SAVE
 # -------------------
 
+if save:
 
-if st.button("💾 Save User Details"):
+    if result:
 
-    save_user(
+        try:
 
-        name,
+            save_user(
+                name,
+                age,
+                goal,
+                result["bmi"],
+                result["category"],
+                result["calories"]
+            )
 
-        age,
+            st.success(
+                "✅ User Saved Successfully"
+            )
 
-        goal,
+        except Exception as e:
 
-        result["bmi"],
+            st.error(f"Save Error: {e}")
 
-        result["category"],
+    else:
 
-        result["calories"]
-
-    )
-
-    st.success(
-        "User Saved Successfully"
-    )
+        st.warning(
+            "Generate plan first before saving."
+        )
 
 
 # -------------------
-# GENERATE
+# DISPLAY
 # -------------------
 
+if result:
 
-if generate:
+    st.header("📊 Health Dashboard")
 
-
-    result=generate_plan(
-
-        age,
-
-        height,
-
-        weight,
-
-        goal,
-
-        budget,
-
-        food,
-
-        experience,
-
-        activity,
-
-        allergy
-
-    )
-
-
-
-    st.header(
-        "📊 Health Dashboard"
-    )
-
-
-    a,b,c,d=st.columns(4)
-
-
+    a, b, c, d = st.columns(4)
 
     a.metric(
         "BMI",
         result["bmi"]
     )
 
-
     b.metric(
         "Category",
         result["category"]
     )
 
-
     c.metric(
         "Calories",
-        str(result["calories"])
-        +
-        " kcal"
+        str(result["calories"]) + " kcal"
     )
-
 
     d.metric(
         "Water",
-        str(result["water"])
-        +
-        " L"
+        str(result["water"]) + " L"
     )
-
-
 
     st.warning(
-
 f"""
-
 ⭐ Recovery Recommendation
 
-
 Sleep:
-
 {result["sleep"]}
 
-
 Water:
-
 {result["water"]} L
 
-
 Rest:
-
 Sunday
-
 """
-
     )
 
 
-
-
+# -------------------
 # WORKOUT
+# -------------------
 
-
-    st.header(
-        "🏋️ Weekly Workout"
-    )
-
+    st.header("🏋️ Weekly Workout")
 
     for day in result["workout"]:
 
-
         with st.expander(day):
 
-
             st.write(
-
                 result["workout"][day]
-
             )
 
 
-
+# -------------------
 # DIET
+# -------------------
 
-
-    st.header(
-        "🍛 Diet Plan"
-    )
-
+    st.header("🍛 Diet Plan")
 
     for meal in result["diet"]:
 
-
         with st.expander(meal):
 
-
             st.write(
-
                 result["diet"][meal]
-
             )
 
 
-
+# -------------------
 # PDF
+# -------------------
 
+    try:
 
-    pdf=generate_pdf(
-
-        name,
-
-        result
-
-    )
-
-
-
-    with open(
-        pdf,
-        "rb"
-    ) as f:
-
-
-        st.download_button(
-
-            "📄 Download Premium Report",
-
-            f,
-
-            file_name=pdf
-
+        pdf = generate_pdf(
+            name,
+            result
         )
 
+        with open(pdf, "rb") as f:
+
+            st.download_button(
+                "📄 Download Premium Report",
+                f,
+                file_name=pdf
+            )
+
+    except Exception as e:
+
+        st.warning(
+            f"PDF Error: {e}"
+        )
 
 
     st.success(
         "Plan generated successfully."
     )
-
 
     st.info(
         "Generate report anytime without saving."
