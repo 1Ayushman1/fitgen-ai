@@ -1,8 +1,15 @@
 import streamlit as st
-from recommendation_engine import generate_plan
+
+# FORCE RELOAD UPDATED recommendation_engine
+import importlib
+import recommendation_engine
+
+importlib.reload(recommendation_engine)
+
+generate_plan = recommendation_engine.generate_plan
+
 from pdf_generator import generate_pdf
 from save_user import save_user
-
 
 # -------------------
 # PAGE
