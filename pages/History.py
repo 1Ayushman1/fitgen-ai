@@ -1,106 +1,123 @@
 import streamlit as st
 import sqlite3
+import pandas as pd
 
-conn=sqlite3.connect(
-"fitness.db",
-check_same_thread=False
+st.set_page_config(
+    page_title="History",
+    page_icon="📜",
+    layout="wide"
 )
 
-cursor=conn.cursor()
+st.title("📜 History")
 
-st.title(
-"📜 History"
+# DATABASE
+conn = sqlite3.connect("users.db")
+cursor = conn.cursor()
+
+# CREATE TABLE IF NOT EXISTS
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users(
+name TEXT,
+age INTEGER,
+height REAL,
+weight REAL,
+goal TEXT,
+bmi REAL,
+calories INTEGER
 )
+""")
 
+conn.commit()
 
-if st.button(
-"🗑️ Clear History"
-):
+# LOAD DATA
+cursor.execute("""
+SELECT
+name,
+age,
+height,
+weight,
+goal,
+bmi,
+calories
+FROM users
+""")
 
-    cursor.execute(
-"""
-DELETE FROM users
-"""
-    )
-
-    conn.commit()
-
-    st.success(
-"History Cleared"
-    )
-
-
-
-rows=list(
-cursor.execute(
-"""
-SELECT * FROM users
-"""
-)
-)
-
+rows = cursor.fetchall()
 
 if rows:
 
-    selected=st.selectbox(
-
-"Select User",
-
-[
-r[0]
-
-for r in rows
-
-]
-
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "Name",
+            "Age",
+            "Height",
+            "Weight",
+            "Goal",
+            "BMI",
+            "Calories"
+        ]
     )
 
+    st.dataframe(
+        df,
+        use_container_width=True
+    )
 
+    st.divider()
 
-    for r in rows:
+    selected = st.selectbox(
+        "Select Saved User",
+        df["Name"].tolist()
+    )
 
-        if r[0]==selected:
+    selected_data = (
+        df[df["Name"] == selected]
+        .iloc[0]
+    )
 
-            st.write(
-f"""
-Age:
-{r[1]}
+    st.subheader("Selected User")
 
-Height:
-{r[2]}
+    c1, c2, c3, c4 = st.columns(4)
 
-Weight:
-{r[3]}
+    c1.metric(
+        "BMI",
+        round(selected_data["BMI"], 2)
+    )
 
-Goal:
-{r[4]}
-"""
-            )
+    c2.metric(
+        "Goal",
+        selected_data["Goal"]
+    )
 
-            if st.button(
-"Use This Plan"
-):
+    c3.metric(
+        "Calories",
+        f'{selected_data["Calories"]} kcal'
+    )
 
-                st.session_state[
-"name"
-]=r[0]
+    c4.metric(
+        "Weight",
+        f'{selected_data["Weight"]} kg'
+    )
 
-                st.session_state[
-"age"
-]=r[1]
+    if st.button("🗑 Clear History"):
 
-                st.session_state[
-"height"
-]=r[2]
+        cursor.execute(
+            "DELETE FROM users"
+        )
 
-                st.session_state[
-"weight"
-]=r[3]
+        conn.commit()
 
-                st.session_state[
-"goal"
-]=r[4]
+        st.success(
+            "History Cleared"
+        )
 
-                st.success(
-"Open Planner"
-)
+        st.rerun()
+
+else:
+
+    st.info(
+        "No saved users yet"
+    )
+
+conn.close()
