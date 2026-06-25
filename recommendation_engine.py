@@ -25,19 +25,23 @@ def sleep_hours(age, goal):
     if age <= 18:
         return "8–10 hrs"
 
-    if goal == "Muscle Gain":
+    elif goal == "Muscle Gain":
         return "8–9 hrs"
 
     return "7–8 hrs"
 
 
-def calories(weight, height, age, gender, goal):
+def calculate_calories(weight, height, age, goal):
 
-    if gender == "Male":
-        bmr = 10 * weight + 6.25 * height - 5 * age + 5
-
-    else:
-        bmr = 10 * weight + 6.25 * height - 5 * age - 161
+    bmr = (
+        10 * weight
+        +
+        6.25 * height
+        -
+        5 * age
+        +
+        5
+    )
 
     if goal == "Muscle Gain":
         bmr += 350
@@ -55,7 +59,8 @@ def get_food_plan(goal, preference):
     protein = (
         "Chicken + Eggs"
         if nonveg
-        else "Paneer"
+        else
+        "Paneer"
     )
 
     if goal == "Muscle Gain":
@@ -219,41 +224,44 @@ def workout_plan(goal):
 
 def generate_plan(
         age,
-        gender,
-        weight,
         height,
+        weight,
         goal,
-        preference,
-        budget
+        budget,
+        food,
+        experience,
+        activity,
+        allergy
 ):
 
     bmi = round(
         weight /
-        (
-            (height / 100) ** 2
-        ),
+        ((height / 100) ** 2),
         2
     )
 
-    return {
+    result = {
 
         "bmi":
         bmi,
 
         "category":
-        bmi_category(bmi),
+        bmi_category(
+            bmi
+        ),
 
         "calories":
-        calories(
+        calculate_calories(
             weight,
             height,
             age,
-            gender,
             goal
         ),
 
         "water":
-        calculate_water(weight),
+        calculate_water(
+            weight
+        ),
 
         "sleep":
         sleep_hours(
@@ -267,10 +275,19 @@ def generate_plan(
         "budget":
         budget,
 
+        "experience":
+        experience,
+
+        "activity":
+        activity,
+
+        "allergy":
+        allergy,
+
         "diet":
         get_food_plan(
             goal,
-            preference
+            food
         ),
 
         "workout":
@@ -279,3 +296,5 @@ def generate_plan(
         )
 
     }
+
+    return result
