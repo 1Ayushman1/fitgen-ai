@@ -187,8 +187,7 @@ with c2:
 # -------------------
 
 
-if save:
-
+if st.button("💾 Save User Details"):
 
     save_user(
 
@@ -196,19 +195,19 @@ if save:
 
         age,
 
-        height,
+        goal,
 
-        weight,
+        result["bmi"],
 
-        goal
+        result["category"],
+
+        result["calories"]
 
     )
-
 
     st.success(
-        "User saved successfully."
+        "User Saved Successfully"
     )
-
 
 
 # -------------------
